@@ -14,6 +14,9 @@ import (
 // 10,000 emails, 10 goroutines, 37747 ms
 // 10,000 emails, 20 goroutines, 37044 ms
 
+// 100,000 emails, 5 goroutines, 379796 ms
+// 100,000 emails, 10 goroutines, 365820 ms
+
 func main() {
 	smtpHost := getEnv("SMTP_HOST", "localhost")
 	smtpPort := getEnv("SMTP_PORT", "25")
@@ -27,7 +30,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	// email amount
-	emailAmount := 10_000
+	emailAmount := 1_000
 	if smtpHost != "localhost" {
 		emailAmount = 1
 	}
