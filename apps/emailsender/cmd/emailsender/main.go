@@ -4,8 +4,15 @@ import (
 	"fmt"
 	"net/smtp"
 	"os"
+	"sync"
 	"time"
 )
+
+// record macbook air m2
+// 10,000 emails, 1 goroutines, 57787 ms
+// 10,000 emails, 5 goroutines, 38232 ms
+// 10,000 emails, 10 goroutines, 37747 ms
+// 10,000 emails, 20 goroutines, 37044 ms
 
 func main() {
 	smtpHost := getEnv("SMTP_HOST", "localhost")
@@ -14,32 +21,55 @@ func main() {
 	smtpPassword := getEnv("SMTP_PASSWORD", "password")
 	auth := smtp.PlainAuth("identity", smtpUsername, smtpPassword, smtpHost)
 
-	fmt.Println("running with SMTP host", smtpHost)
+	// goroutine config
+	goroutineLimit := 5
+	limitChannel := make(chan int, goroutineLimit)
+	var wg sync.WaitGroup
+
+	// email amount
+	emailAmount := 10_000
+	if smtpHost != "localhost" {
+		emailAmount = 1
+	}
+	fmt.Println("running with SMTP host", smtpHost, "with", emailAmount, "email(s)")
+
+	successCount := 0
 	errCount := 0
 	start := time.Now()
-	for i := 0; i < 100; i++ {
-		// send email
-		from := "kiarttantasi@gmail.com"
-		to := []string{"kiarttantasi@gmail.com"}
-		subject := "Test subject"
-		body := fmt.Sprintf("Test body: %d", i)
-		message := []byte(
-			fmt.Sprintf("Subject: %s\r\n\r\n%s", subject, body),
-		)
-		err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, message)
-		if err != nil {
-			errCount++
-			fmt.Println(err)
-		}
+	for i := 0; i < emailAmount; i++ {
+		wg.Add(1)
+		limitChannel <- 1
+		go func(i int) {
+			defer wg.Done()
 
-		// progress
-		if i%10 == 0 {
-			fmt.Println("Sent email index", i)
-		}
+			// send email
+			from := "kiarttantasi@gmail.com"
+			to := []string{"kiarttantasi@gmail.com"}
+			subject := "Test subject"
+			body := fmt.Sprintf("Test body: %d", i)
+			message := []byte(
+				fmt.Sprintf("Subject: %s\r\n\r\n%s", subject, body),
+			)
+			err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, message)
+			if err != nil {
+				errCount++
+				fmt.Println(err)
+			} else {
+				successCount++
+			}
+
+			// log progress
+			if i%10 == 0 {
+				fmt.Println("Sent email index", i)
+			}
+			<-limitChannel
+		}(i)
 	}
+	wg.Wait()
 
-	fmt.Println("done in", time.Since(start).Milliseconds())
+	fmt.Println("done in", time.Since(start).Milliseconds(), "ms")
 	fmt.Println("errCount:", errCount)
+	fmt.Println("sucessCount:", successCount)
 }
 
 func getEnv(envName, defaultValue string) string {
