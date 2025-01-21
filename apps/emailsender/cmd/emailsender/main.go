@@ -65,6 +65,7 @@ func main() {
 			if i%10 == 0 {
 				fmt.Println("Sent email index", i)
 			}
+			fakeGenerateHtmlTime()
 			<-limitChannel
 		}(i)
 	}
@@ -81,4 +82,9 @@ func getEnv(envName, defaultValue string) string {
 		return val
 	}
 	return defaultValue
+}
+
+func fakeGenerateHtmlTime() {
+	// avg time when communicating through kube service dns
+	time.Sleep(50 * time.Millisecond)
 }
