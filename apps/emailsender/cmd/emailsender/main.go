@@ -8,14 +8,16 @@ import (
 	"time"
 )
 
-// record macbook air m2
+// record macbook air m2, no html generation
 // 10,000 emails, 1 goroutines, 57787 ms
 // 10,000 emails, 5 goroutines, 38232 ms
 // 10,000 emails, 10 goroutines, 37747 ms
 // 10,000 emails, 20 goroutines, 37044 ms
-
 // 100,000 emails, 5 goroutines, 379796 ms
 // 100,000 emails, 10 goroutines, 365820 ms
+
+// record macbook air m2, with html generation
+// 10,000 emails, 5 goroutines, 120296 ms
 
 func main() {
 	smtpHost := getEnv("SMTP_HOST", "localhost")
@@ -30,7 +32,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	// email amount
-	emailAmount := 1_000
+	emailAmount := 10_000
 	if smtpHost != "localhost" {
 		emailAmount = 1
 	}
