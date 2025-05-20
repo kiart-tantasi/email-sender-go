@@ -24,17 +24,17 @@ func main() {
 	// env
 	smtpHost := getEnv("SMTP_HOST", "localhost")
 	smtpPort := getEnv("SMTP_PORT", "25")
-	smtpUsername := getEnv("SMTP_USERNAME", "username")
-	smtpPassword := getEnv("SMTP_PASSWORD", "password")
-	auth := smtp.PlainAuth("identity", smtpUsername, smtpPassword, smtpHost)
+	// smtpUsername := getEnv("SMTP_USERNAME", "username")
+	// smtpPassword := getEnv("SMTP_PASSWORD", "password")
+	// auth := smtp.PlainAuth("identity", smtpUsername, smtpPassword, smtpHost)
 
 	// goroutine amount
-	goroutineLimit := 20
+	goroutineLimit := 10
 	limitChannel := make(chan int, goroutineLimit)
 	var wg sync.WaitGroup
 
 	// email amount
-	emailAmount := 10_000
+	emailAmount := 100
 	if smtpHost != "localhost" {
 		emailAmount = 1
 	}
@@ -57,7 +57,7 @@ func main() {
 			message := []byte(
 				fmt.Sprintf("Subject: %s\r\n\r\n%s", subject, body),
 			)
-			err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, message)
+			err := smtp.SendMail(smtpHost+":"+smtpPort, nil, from, to, message)
 			if err != nil {
 				errCount++
 				fmt.Println(err)
