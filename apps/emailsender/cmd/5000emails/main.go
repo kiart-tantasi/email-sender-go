@@ -19,9 +19,6 @@ func main() {
 
 	// email amount
 	emailAmount := 5000
-	if smtpHost != "localhost" {
-		emailAmount = 1
-	}
 	fmt.Println("running with SMTP host", smtpHost, "with", emailAmount, "email(s), with", goroutineLimit, "concurrent goroutine(s)")
 
 	successCount := 0
