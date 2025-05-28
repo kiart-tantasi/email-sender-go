@@ -54,8 +54,10 @@ func main() {
 			to := []string{"kiarttantasi@gmail.com"}
 			subject := "Test subject"
 			body := fmt.Sprintf("Test body: %d", i)
+			headers := "X-NL-TYPE: nl_type_1\nX-CAMPAIGN: C1"
+			// headers := "X-NL-TYPE: nl_type_1"
 			message := []byte(
-				fmt.Sprintf("Subject: %s\r\n\r\n%s", subject, body),
+				fmt.Sprintf("Subject: %s\n%s\r\n\r\n%s", subject, headers, body),
 			)
 			err := smtp.SendMail(smtpHost+":"+smtpPort, nil, from, to, message)
 			if err != nil {
