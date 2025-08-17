@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"net/smtp"
-	"os"
 	"sync"
 	"time"
+
+	"github.com/kiart-tantasi/email-sender-go/internal/env"
+	"github.com/kiart-tantasi/email-sender-go/internal/fake"
 )
 
 // record macbook air m2, no html generation
@@ -22,10 +24,10 @@ import (
 
 func main() {
 	// env
-	smtpHost := getEnv("SMTP_HOST", "localhost")
-	smtpPort := getEnv("SMTP_PORT", "25")
-	// smtpUsername := getEnv("SMTP_USERNAME", "username")
-	// smtpPassword := getEnv("SMTP_PASSWORD", "password")
+	smtpHost := env.GetEnv("SMTP_HOST", "localhost")
+	smtpPort := env.GetEnv("SMTP_PORT", "25")
+	// smtpUsername := env.GetEnv("SMTP_USERNAME", "username")
+	// smtpPassword := env.GetEnv("SMTP_PASSWORD", "password")
 	// auth := smtp.PlainAuth("identity", smtpUsername, smtpPassword, smtpHost)
 
 	// goroutine amount
@@ -71,7 +73,7 @@ func main() {
 			if i%10 == 0 {
 				fmt.Println("Sent email index", i)
 			}
-			fakeGenerateHtmlTime()
+			fake.FakeGenerateHtmlTime()
 			<-limitChannel
 		}(i)
 	}
@@ -80,17 +82,4 @@ func main() {
 	fmt.Println("done in", time.Since(start).Milliseconds(), "ms")
 	fmt.Println("errCount:", errCount)
 	fmt.Println("sucessCount:", successCount)
-}
-
-func getEnv(envName, defaultValue string) string {
-	val := os.Getenv(envName)
-	if val != "" {
-		return val
-	}
-	return defaultValue
-}
-
-func fakeGenerateHtmlTime() {
-	// avg time when communicating through kube dns
-	time.Sleep(15 * time.Millisecond)
 }
