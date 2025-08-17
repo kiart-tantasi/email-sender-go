@@ -19,29 +19,29 @@ import (
 
 # 100
 
-100 send, 1 goroutines, 1 smtp  clients, 100 channel capacity, 476 ms
-100 send, 1 goroutines, 1 smtp  clients, 100 channel capacity, 297 ms
-100 send, 10 goroutines, 1 smtp  clients, 100 channel capacity, 343 ms
-100 send, 10 goroutines, 10 smtp  clients, 100 channel capacity, 180 ms
-100 send, 100 goroutines, 1 smtp  clients, 100 channel capacity, 271 ms
-100 send, 100 goroutines, 100 smtp  clients, 100 channel capacity, 243 ms
+100 send, 1 goroutines, 1 smtp  clients, 100 channel capacity, 476 ms, (successful send: 100)
+100 send, 1 goroutines, 1 smtp  clients, 100 channel capacity, 297 ms, (successful send: 100)
+100 send, 10 goroutines, 1 smtp  clients, 100 channel capacity, 343 ms, (successful send: 100)
+100 send, 10 goroutines, 10 smtp  clients, 100 channel capacity, 180 ms, (successful send: 100)
+100 send, 100 goroutines, 1 smtp  clients, 100 channel capacity, 271 ms, (successful send: 100)
+100 send, 100 goroutines, 100 smtp  clients, 100 channel capacity, 243 ms, (successful send: 100)
 
 # 1,000
 
-1000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 4760 ms
-1000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 2255 ms
-1000 send, 10 goroutines, 1 smtp clients, 100 channel capacity, 2981 ms
-1000 send, 10 goroutines, 10 smtp clients, 100 channel capacity, 1571 ms
-1000 send, 100 goroutines, 1 smtp clients, 100 channel capacity, 2919 ms
-1000 send, 100 goroutines, 100 smtp clients, 100 channel capacity, 1601 ms
+1000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 4760 ms, (successful send: 1000)
+1000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 2255 , (successful send: 1000)
+1000 send, 10 goroutines, 1 smtp clients, 100 channel capacity, 2981 , (successful send: 1000)
+1000 send, 10 goroutines, 10 smtp clients, 100 channel capacity, 1571 , (successful send: 1000)
+1000 send, 100 goroutines, 1 smtp clients, 100 channel capacity, 2919 , (successful send: 1000)
+1000 send, 100 goroutines, 100 smtp clients, 100 channel capacity, 1601 , (successful send: 1000)
 
 # 10,000
 
-10000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 66930 ms
+10000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 66930 ms, (successful send: 10000)
 10000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 20617 ms, (successful send: 10000)
-10000 send, 10 goroutines, 1 smtp clients, 100 channel capacity, 46406 ms
+10000 send, 10 goroutines, 1 smtp clients, 100 channel capacity, 46406 ms, (successful send: 10000)
 10000 send, 10 goroutines, 10 smtp clients, 100 channel capacity, 15192 ms, (successful send: 10000)
-10000 send, 100 goroutines, 1 smtp clients, 100 channel capacity, 44224 ms
+10000 send, 100 goroutines, 1 smtp clients, 100 channel capacity, 44224 ms, (successful send: 10000)
 10000 send, 100 goroutines, 100 smtp clients, 100 channel capacity, 17212 ms, (successful send: 10000)
 
 # 100,000
