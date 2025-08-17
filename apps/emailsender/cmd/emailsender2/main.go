@@ -28,25 +28,25 @@ import (
 
 # 1,000
 
-1000 send, 1 goroutines, 1 smtp  clients, 100 channel capacity, 4760 ms
-1000 send, 1 goroutines, 1 smtp  clients, 100 channel capacity, 2255 ms
-1000 send, 10 goroutines, 1 smtp  clients, 100 channel capacity, 2981 ms
-1000 send, 10 goroutines, 10 smtp  clients, 100 channel capacity, 1571 ms
-1000 send, 100 goroutines, 1 smtp  clients, 100 channel capacity, 2919 ms
-1000 send, 100 goroutines, 100 smtp  clients, 100 channel capacity, 1601 ms
+1000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 4760 ms
+1000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 2255 ms
+1000 send, 10 goroutines, 1 smtp clients, 100 channel capacity, 2981 ms
+1000 send, 10 goroutines, 10 smtp clients, 100 channel capacity, 1571 ms
+1000 send, 100 goroutines, 1 smtp clients, 100 channel capacity, 2919 ms
+1000 send, 100 goroutines, 100 smtp clients, 100 channel capacity, 1601 ms
 
 # 10,000
 
-10000 send, 1 goroutines, 1 smtp  clients, 100 channel capacity, 66930 ms
-10000 send, 1 goroutines, 1 smtp  clients, 100 channel capacity, 20617 ms, (successful send: 10000)
-10000 send, 10 goroutines, 1 smtp  clients, 100 channel capacity, 46406 ms
-10000 send, 10 goroutines, 10 smtp  clients, 100 channel capacity, 15192 ms, (successful send: 10000)
-10000 send, 100 goroutines, 1 smtp  clients, 100 channel capacity, 44224 ms
-10000 send, 100 goroutines, 100 smtp  clients, 100 channel capacity, 17212 ms, (successful send: 10000)
+10000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 66930 ms
+10000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 20617 ms, (successful send: 10000)
+10000 send, 10 goroutines, 1 smtp clients, 100 channel capacity, 46406 ms
+10000 send, 10 goroutines, 10 smtp clients, 100 channel capacity, 15192 ms, (successful send: 10000)
+10000 send, 100 goroutines, 1 smtp clients, 100 channel capacity, 44224 ms
+10000 send, 100 goroutines, 100 smtp clients, 100 channel capacity, 17212 ms, (successful send: 10000)
 
 # 100,000
 
-100000 send, 100 goroutines, 100 smtp  clients, 100 channel capacity, 161958 ms, (successful send: 100000)
+100000 send, 100 goroutines, 100 smtp clients, 100 channel capacity, 161958 ms, (successful send: 100000)
 */
 type Queue struct {
 	from string
@@ -140,7 +140,7 @@ func main() {
 
 	// wait
 	wg.Wait()
-	fmt.Printf("%d send, %d goroutines, %d smtp  clients, %d channel capacity, %d ms, (successful send: %d)\n", sendCounter, GOROUTINE_COUNT, smtpClientCounter, CHANNEL_CAPACITY, time.Since(start).Milliseconds(), successfulSendCounter)
+	fmt.Printf("%d send, %d goroutines, %d smtp clients, %d channel capacity, %d ms, (successful send: %d)\n", sendCounter, GOROUTINE_COUNT, smtpClientCounter, CHANNEL_CAPACITY, time.Since(start).Milliseconds(), successfulSendCounter)
 }
 
 func mockEmailPaylod() (string, []string, []byte) {
