@@ -124,11 +124,10 @@ func main() {
 						continue
 					} else {
 						writer.Close()
-						client.Reset()
 						atomic.AddInt32(&successfulSendCounter, 1)
 					}
-					// if err := smtp.SendMail(smtpHost+":"+smtpPort, nil, q.from, q.to, q.msg); err != nil {}
-					atomic.AddInt32(&sendCounter, 1) // count for both success and error for now
+
+					atomic.AddInt32(&sendCounter, 1)
 					wg.Done()
 				case <-time.After(10 * time.Second):
 					log.Println("Error: No message received for 10 seconds so app wil exit")
