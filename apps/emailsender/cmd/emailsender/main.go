@@ -1,87 +1,181 @@
 package main
 
-// NOTE: this verson is really slow because smtp clients are not reused
-
 import (
 	"fmt"
+	"log"
 	"net/smtp"
+	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/kiart-tantasi/email-sender-go/internal/env"
-	"github.com/kiart-tantasi/email-sender-go/internal/fake"
 )
 
-// record macbook air m2, no html generation
-// 10,000 emails, 1 goroutines, 57787 ms
-// 10,000 emails, 5 goroutines, 38232 ms
-// 10,000 emails, 10 goroutines, 37747 ms
-// 10,000 emails, 20 goroutines, 37044 ms
+/*
+[RESULTS]
 
-// record macbook air m2, with html generation
-// 10,000 emails, 1 goroutines, 245451 ms
-// 10,000 emails, 5 goroutines, 50875 ms
-// 10,000 emails, 10 goroutines, 35820 ms
-// 10,000 emails, 20 goroutines, 34750 ms
+(macbook air m2)
+
+# 100
+
+100 send, 1 goroutines, - smtp  clients, 100 channel capacity, 476 ms, (successful send: 100)
+100 send, 1 goroutines, 1 smtp  clients, 100 channel capacity, 297 ms, (successful send: 100)
+100 send, 10 goroutines, - smtp  clients, 100 channel capacity, 343 ms, (successful send: 100)
+100 send, 10 goroutines, 10 smtp  clients, 100 channel capacity, 180 ms, (successful send: 100)
+100 send, 100 goroutines, - smtp  clients, 100 channel capacity, 271 ms, (successful send: 100)
+100 send, 100 goroutines, 100 smtp  clients, 100 channel capacity, 243 ms, (successful send: 100)
+
+# 1,000
+
+1000 send, 1 goroutines, - smtp clients, 100 channel capacity, 4760 ms, (successful send: 1000)
+1000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 2255 , (successful send: 1000)
+1000 send, 10 goroutines, - smtp clients, 100 channel capacity, 2981 , (successful send: 1000)
+1000 send, 10 goroutines, 10 smtp clients, 100 channel capacity, 1571 , (successful send: 1000)
+1000 send, 100 goroutines, - smtp clients, 100 channel capacity, 2919 , (successful send: 1000)
+1000 send, 100 goroutines, 100 smtp clients, 100 channel capacity, 1601 , (successful send: 1000)
+
+# 10,000
+
+10000 send, 1 goroutines, - smtp clients, 100 channel capacity, 66930 ms, (successful send: 10000)
+10000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 20617 ms, (successful send: 10000)
+10000 send, 10 goroutines, - smtp clients, 100 channel capacity, 46406 ms, (successful send: 10000)
+10000 send, 10 goroutines, 10 smtp clients, 100 channel capacity, 15192 ms, (successful send: 10000)
+10000 send, 100 goroutines, - smtp clients, 100 channel capacity, 44224 ms, (successful send: 10000)
+10000 send, 100 goroutines, 100 smtp clients, 100 channel capacity, 17212 ms, (successful send: 10000)
+
+# 100,000
+
+100000 send, 1 goroutines, 1 smtp clients, 100 channel capacity, 195919 ms, (successful send: 100000)
+100000 send, 10 goroutines, 10 smtp  clients, 100 channel capacity, 157515 ms, (successful send: 100000)
+100000 send, 100 goroutines, 100 smtp clients, 100 channel capacity, 161958 ms, (successful send: 100000)
+*/
+type Queue struct {
+	from string
+	to   []string
+	msg  []byte
+}
+
+// CONFIG
+var EMAIL_COUNT int = 100_000
+var GOROUTINE_COUNT = 10
+var CHANNEL_CAPACITY int = 100
+
+// CONUTERS
+var smtpClientCounter int32 = 0
+var sendCounter int32 = 0
+var successfulSendCounter int32 = 0
 
 func main() {
-	// env
 	smtpHost := env.GetEnv("SMTP_HOST", "localhost")
 	smtpPort := env.GetEnv("SMTP_PORT", "25")
-	// smtpUsername := env.GetEnv("SMTP_USERNAME", "username")
-	// smtpPassword := env.GetEnv("SMTP_PASSWORD", "password")
-	// auth := smtp.PlainAuth("identity", smtpUsername, smtpPassword, smtpHost)
 
-	// goroutine amount
-	goroutineLimit := 10
-	limitChannel := make(chan int, goroutineLimit)
+	queue := make(chan Queue, CHANNEL_CAPACITY)
 	var wg sync.WaitGroup
-
-	// email amount
-	emailAmount := 10000
-	if smtpHost != "localhost" {
-		emailAmount = 1
-	}
-	fmt.Println("running with SMTP host", smtpHost, "with", emailAmount, "email(s), with", goroutineLimit, "concurrent goroutine(s)")
-
-	successCount := 0
-	errCount := 0
 	start := time.Now()
-	for i := 0; i < emailAmount; i++ {
-		wg.Add(1)
-		limitChannel <- 1
-		go func(i int) {
-			defer wg.Done()
 
-			// send email
-			from := "kiarttantasi@gmail.com"
-			to := []string{"kiarttantasi@gmail.com"}
-			subject := "Test subject"
-			body := fmt.Sprintf("Test body: %d", i)
-			headers := "X-NL-TYPE: nl_type_1\nX-CAMPAIGN: C1"
-			// headers := "X-NL-TYPE: nl_type_1"
-			message := []byte(
-				fmt.Sprintf("Subject: %s\n%s\r\n\r\n%s", subject, headers, body),
-			)
-			err := smtp.SendMail(smtpHost+":"+smtpPort, nil, from, to, message)
+	// enqueue mocks
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		from, to, msg := mockEmailPaylod()
+		for range EMAIL_COUNT {
+			queue <- Queue{
+				from,
+				to,
+				msg,
+			}
+			wg.Add(1)
+		}
+	}()
+
+	smtpClientPool := &SmtpClientPool{}
+
+	// create multiple goroutines to send email to smtp server
+	for i := range GOROUTINE_COUNT {
+		go func(idx int) {
+			log.Printf("Started goroutine %d", idx)
+			client, err := smtpClientPool.acquire(smtpHost, smtpPort)
 			if err != nil {
-				errCount++
-				fmt.Println(err)
-			} else {
-				successCount++
+				log.Printf("Errror when acquiring smtp client: %s", err)
+				return
 			}
 
-			// log progress
-			if i%10 == 0 {
-				fmt.Println("Sent email index", i)
+			// infinite loop
+			for {
+				select {
+				case q := <-queue:
+
+					client.Hello("TEST")
+					client.Mail(q.from)
+					client.Rcpt(q.to[0])
+					writer, err := client.Data()
+					// reconnect if client gets error
+					if err != nil {
+						log.Printf("Client data error, attempting to reconnect: %v", err)
+						client, err = newClient(smtpHost, smtpPort) // temp way to reconnect
+						if err != nil {
+							log.Printf("Error when reconnecting smtp client: %s", err)
+							return
+						}
+					}
+
+					// Send email
+					if _, err := writer.Write(q.msg); err != nil {
+						log.Printf("Error when sending email on goroutine %d: %s", i, err)
+						continue
+					} else {
+						writer.Close()
+						atomic.AddInt32(&successfulSendCounter, 1)
+					}
+
+					atomic.AddInt32(&sendCounter, 1)
+					wg.Done()
+				case <-time.After(10 * time.Second):
+					log.Println("Error: No message received for 10 seconds so app wil exit")
+					os.Exit(1)
+				}
 			}
-			fake.FakeGenerateHtmlTime()
-			<-limitChannel
+
 		}(i)
 	}
-	wg.Wait()
 
-	fmt.Println("done in", time.Since(start).Milliseconds(), "ms")
-	fmt.Println("errCount:", errCount)
-	fmt.Println("sucessCount:", successCount)
+	// wait
+	wg.Wait()
+	fmt.Printf("%d send, %d goroutines, %d smtp clients, %d channel capacity, %d ms, (successful send: %d)\n", sendCounter, GOROUTINE_COUNT, smtpClientCounter, CHANNEL_CAPACITY, time.Since(start).Milliseconds(), successfulSendCounter)
+}
+
+func mockEmailPaylod() (string, []string, []byte) {
+	from := "from@test.com"
+	to := []string{"to@test.com"}
+	msg := "Subject: Hello from Example.com !\n\nThis is body"
+	return from, to, []byte(msg)
+}
+
+func newClient(smtpHost, smtpPort string) (*smtp.Client, error) {
+	atomic.AddInt32(&smtpClientCounter, 1)
+	addr := smtpHost + ":" + smtpPort
+	client, err := smtp.Dial(addr)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
+// smtp client pool
+// TODO: move into a separate package
+type SmtpClientPoolI interface {
+	acquire(smtpHost, smtpPort string) (*smtp.Client, error)
+}
+type SmtpClientPool struct {
+	// pool [](*smtp.Client)
+}
+
+func (s SmtpClientPool) acquire(smtpHost, smtpPort string) (*smtp.Client, error) {
+	// just create a new one for now
+	if client, err := newClient(smtpHost, smtpPort); err != nil {
+		return nil, err
+	} else {
+		return client, nil
+	}
 }
