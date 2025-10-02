@@ -1,5 +1,7 @@
 package main
 
+// NOTE: this verson is really slow because smtp clients are not reused
+
 import (
 	"fmt"
 	"net/smtp"
@@ -36,7 +38,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	// email amount
-	emailAmount := 100
+	emailAmount := 10000
 	if smtpHost != "localhost" {
 		emailAmount = 1
 	}
