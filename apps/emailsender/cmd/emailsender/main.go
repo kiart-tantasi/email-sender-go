@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/smtp"
-	"os"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/kiart-tantasi/email-sender-go/internal/env"
+	"github.com/kiart-tantasi/email-sender-go/internal/smtppool"
 )
 
 // NOTE: there is smtp client pool but smtp clien is still always created. if you have time, please fix it.
@@ -59,18 +59,22 @@ type Queue struct {
 }
 
 // CONFIG
-var EMAIL_COUNT int = 100_000
 var GOROUTINE_COUNT = 10
 var CHANNEL_CAPACITY int = 100
+var SMTP_POOL_SIZE int = 10
 
 // CONUTERS
-var smtpClientCounter int32 = 0
 var sendCounter int32 = 0
 var successfulSendCounter int32 = 0
 
 func main() {
 	smtpHost := env.GetEnv("SMTP_HOST", "localhost")
 	smtpPort := env.GetEnv("SMTP_PORT", "25")
+	emailCountStr := env.GetEnv("EMAIL_COUNT", "100")
+	emailCount, err := strconv.Atoi(emailCountStr)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	queue := make(chan Queue, CHANNEL_CAPACITY)
 	var wg sync.WaitGroup
@@ -81,7 +85,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		from, to, msg := mockEmailPaylod()
-		for range EMAIL_COUNT {
+		for range emailCount {
 			queue <- Queue{
 				from,
 				to,
@@ -91,22 +95,26 @@ func main() {
 		}
 	}()
 
-	smtpClientPool := &SmtpClientPool{}
+	pool, err := smtppool.NewSMTPPool(SMTP_POOL_SIZE, smtpHost, smtpPort)
+	if err != nil {
+		log.Fatalf("Error while creating smtp pool: %v", err)
+	}
 
 	// create multiple goroutines to send email to smtp server
 	for i := range GOROUTINE_COUNT {
 		go func(idx int) {
 			log.Printf("Started goroutine %d", idx)
-			client, err := smtpClientPool.acquire(smtpHost, smtpPort)
-			if err != nil {
-				log.Printf("Errror when acquiring smtp client: %s", err)
-				return
-			}
 
 			// infinite loop
 			for {
 				select {
 				case q := <-queue:
+
+					client, err := pool.Get()
+					if err != nil {
+						log.Printf("Errror when getting smtp client: %s", err)
+						return
+					}
 
 					client.Hello("TEST")
 					client.Mail(q.from)
@@ -115,9 +123,10 @@ func main() {
 					// reconnect if client gets error
 					if err != nil {
 						log.Printf("Client data error, attempting to reconnect: %v", err)
-						client, err = newClient(smtpHost, smtpPort) // temp way to reconnect
+						client, err = smtppool.NewSMTPClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
 						if err != nil {
-							log.Printf("Error when reconnecting smtp client: %s", err)
+							log.Printf("Error when creating new smtp client: %s", err)
+							pool.Return(client)
 							return
 						}
 					}
@@ -131,11 +140,13 @@ func main() {
 						atomic.AddInt32(&successfulSendCounter, 1)
 					}
 
+					// Stats
 					atomic.AddInt32(&sendCounter, 1)
+					// Return smtp client to pool
+					pool.Return(client)
 					wg.Done()
 				case <-time.After(10 * time.Second):
-					log.Println("Error: No message received for 10 seconds so app wil exit")
-					os.Exit(1)
+					log.Fatalln("Error: No message received for 10 seconds so app wil exit")
 				}
 			}
 
@@ -144,7 +155,7 @@ func main() {
 
 	// wait
 	wg.Wait()
-	fmt.Printf("%d send, %d goroutines, %d smtp clients, %d channel capacity, %d ms, (successful send: %d)\n", sendCounter, GOROUTINE_COUNT, smtpClientCounter, CHANNEL_CAPACITY, time.Since(start).Milliseconds(), successfulSendCounter)
+	fmt.Printf("%d send, %d goroutines, %d smtp clients, %d channel capacity, %d ms, (successful send: %d)\n", sendCounter, GOROUTINE_COUNT, SMTP_POOL_SIZE, CHANNEL_CAPACITY, time.Since(start).Milliseconds(), successfulSendCounter)
 }
 
 func mockEmailPaylod() (string, []string, []byte) {
@@ -152,32 +163,4 @@ func mockEmailPaylod() (string, []string, []byte) {
 	to := []string{"to@test.com"}
 	msg := "Subject: Hello from Example.com !\n\nThis is body"
 	return from, to, []byte(msg)
-}
-
-func newClient(smtpHost, smtpPort string) (*smtp.Client, error) {
-	atomic.AddInt32(&smtpClientCounter, 1)
-	addr := smtpHost + ":" + smtpPort
-	client, err := smtp.Dial(addr)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
-}
-
-// smtp client pool
-// TODO: move into a separate package
-type SmtpClientPoolI interface {
-	acquire(smtpHost, smtpPort string) (*smtp.Client, error)
-}
-type SmtpClientPool struct {
-	// pool [](*smtp.Client)
-}
-
-func (s SmtpClientPool) acquire(smtpHost, smtpPort string) (*smtp.Client, error) {
-	// just create a new one for now
-	if client, err := newClient(smtpHost, smtpPort); err != nil {
-		return nil, err
-	} else {
-		return client, nil
-	}
 }
