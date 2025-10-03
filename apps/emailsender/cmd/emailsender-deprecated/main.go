@@ -1,6 +1,6 @@
 package main
 
-// NOTE: this verson is really slow because smtp clients are not reused
+// NOTE: this verson is really slow because there is no smtp client pool handling.
 
 import (
 	"fmt"

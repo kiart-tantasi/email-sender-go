@@ -12,6 +12,8 @@ import (
 	"github.com/kiart-tantasi/email-sender-go/internal/env"
 )
 
+// NOTE: there is smtp client pool but smtp clien is still always created. if you have time, please fix it.
+
 /*
 [RESULTS]
 
