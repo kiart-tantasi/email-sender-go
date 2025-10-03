@@ -32,7 +32,7 @@ func (p *SMTPPool) Get() (*smtp.Client, error) {
 	return client, nil
 }
 
-func (p *SMTPPool) Keep(client *smtp.Client) {
+func (p *SMTPPool) Return(client *smtp.Client) {
 	p.clients <- client
 }
 
