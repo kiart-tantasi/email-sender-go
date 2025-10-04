@@ -1,19 +1,23 @@
 # Development
 
 Run fake smtp server
-```
+
+```bash
 docker compose up
 ```
 
-Run go app to send email
+Alternatively, you can use mock smtp which is built with github.com/emersion/go-smtp
+
+```bash
+go run ./cmd/mocksmtp/main.go
 ```
+
+Run go app to send email
+
+```bash
 go run ./cmd/emailsender/main.go
 ```
 
-Run with env vars
+There are some env vars. Please check in main.go.
 
-```
-SMTP_HOST=? SMTP_PORT=? SMTP_USERNAME=? SMTP_PASSWORD=? go run ./cmd/emailsender/main.go
-```
-
-Check emails in smtp4dev server at http://localhost:4999
+Check emails in smtp4dev server at http://localhost:4999 (if you use smtp4dev)
