@@ -12,8 +12,6 @@ import (
 	"github.com/kiart-tantasi/email-sender-go/internal/smtppool"
 )
 
-// NOTE: there is smtp client pool but smtp clien is still always created. if you have time, please fix it.
-
 /*
 [RESULTS]
 
@@ -95,7 +93,7 @@ func main() {
 		}
 	}()
 
-	pool, err := smtppool.NewSMTPPool(SMTP_POOL_SIZE, smtpHost, smtpPort)
+	pool, err := smtppool.NewPool(SMTP_POOL_SIZE, smtpHost, smtpPort)
 	if err != nil {
 		log.Fatalf("Error while creating smtp pool: %v", err)
 	}
@@ -123,7 +121,7 @@ func main() {
 					// reconnect if client gets error
 					if err != nil {
 						log.Printf("Client data error, attempting to reconnect: %v", err)
-						client, err = smtppool.NewSMTPClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
+						client, err = smtppool.NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
 						if err != nil {
 							log.Printf("Error when creating new smtp client: %s", err)
 							pool.Return(client)
