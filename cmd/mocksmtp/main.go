@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"io"
 	"log"
+	"net/mail"
 	"sync/atomic"
 	"time"
 
@@ -48,6 +50,14 @@ func (s *Session) Data(r io.Reader) error {
 	if s.startTime != nil {
 		log.Printf("session-time: %d ms (%d total emails received)", time.Since(*s.startTime).Milliseconds(), counter)
 	}
+
+	// debug
+	// log.Printf("FROM: %s", s.from)
+	// log.Printf("TO: %s", s.to)
+	// if err := logEmailHeaders(bs); err != nil {
+	// 	log.Fatal(err)
+	// }
+
 	return nil
 }
 
@@ -78,4 +88,16 @@ func main() {
 	if err := s.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func logEmailHeaders(bs []byte) error {
+	msg, err := mail.ReadMessage(bytes.NewReader(bs))
+	if err != nil {
+		return err
+	}
+
+	for k, v := range msg.Header {
+		log.Printf("Email header [%s], value [%s]", k, v)
+	}
+	return nil
 }
