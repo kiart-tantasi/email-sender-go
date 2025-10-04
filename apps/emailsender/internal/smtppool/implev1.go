@@ -2,6 +2,7 @@ package smtppool
 
 import (
 	"fmt"
+	"log"
 	"net/smtp"
 )
 
@@ -33,5 +34,11 @@ func (p *SMTPPoolV1) Get() (*smtp.Client, error) {
 }
 
 func (p *SMTPPoolV1) Return(client *smtp.Client) {
-	p.clients <- client
+	select {
+	case p.clients <- client:
+		// do nothing
+	default:
+		client.Close()
+		log.Println("Channel is full. Closing connection...")
+	}
 }
