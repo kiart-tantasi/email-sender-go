@@ -17,70 +17,56 @@ import (
 
 (macbook air m2)
 
-# 100
+# pool v1, 10,000
 
-100 sent, 1 goroutines, - smtp  clients, 100 channel capacity, 476 ms
-100 sent, 1 goroutines, 1 smtp  clients, 100 channel capacity, 297 ms
-100 sent, 10 goroutines, - smtp  clients, 100 channel capacity, 343 ms
-100 sent, 10 goroutines, 10 smtp  clients, 100 channel capacity, 180 ms
-100 sent, 100 goroutines, - smtp  clients, 100 channel capacity, 271 ms
-100 sent, 100 goroutines, 100 smtp  clients, 100 channel capacity, 243 ms
+10000 sent, 100 goroutines, 1 smtp clients, 100 channel capacity, 878 ms
+10000 sent, 100 goroutines, 2 smtp clients, 100 channel capacity, 508 ms
+10000 sent, 100 goroutines, 5 smtp clients, 100 channel capacity, 443 ms
+10000 sent, 100 goroutines, 10 smtp clients, 100 channel capacity, 331 ms
+10000 sent, 100 goroutines, 50 smtp clients, 100 channel capacity, 249 ms
+10000 sent, 100 goroutines, 100 smtp clients, 100 channel capacity, 247 ms
 
-# 1,000
+summary: after 50 smtp clients, there is no increase on performance.
 
-1000 sent, 1 goroutines, - smtp clients, 100 channel capacity, 4760 ms
-1000 sent, 1 goroutines, 1 smtp clients, 100 channel capacity, 2255 ms
-1000 sent, 10 goroutines, - smtp clients, 100 channel capacity, 2981 ms
-1000 sent, 10 goroutines, 10 smtp clients, 100 channel capacity, 1571 ms
-1000 sent, 100 goroutines, - smtp clients, 100 channel capacity, 2919 ms
-1000 sent, 100 goroutines, 100 smtp clients, 100 channel capacity, 1601 ms
-
-# 10,000
-
-10000 sent, 1 goroutines, - smtp clients, 100 channel capacity, 66930 ms
-10000 sent, 1 goroutines, 1 smtp clients, 100 channel capacity, 20617 ms
-10000 sent, 10 goroutines, - smtp clients, 100 channel capacity, 46406 ms
-10000 sent, 10 goroutines, 10 smtp clients, 100 channel capacity, 15192 ms
-10000 sent, 100 goroutines, - smtp clients, 100 channel capacity, 44224 ms
-10000 sent, 100 goroutines, 100 smtp clients, 100 channel capacity, 17212 ms
-
-# 100,000
-
-100000 sent, 1 goroutines, 1 smtp clients, 100 channel capacity, 195919 ms
-100000 sent, 10 goroutines, 10 smtp  clients, 100 channel capacity, 157515 ms
-100000 sent, 100 goroutines, 100 smtp clients, 100 channel capacity, 161958 ms
-
-# 10,000 (2025-10-05)
-
-10000 sent, 100 goroutines, 10 smtp clients, 100 channel capacity, XXX ms
-10000 sent, 100 goroutines, 100 smtp clients, 100 channel capacity, XXX ms
 */
+
 type Queue struct {
 	from string
 	to   []string
 	msg  []byte
 }
 
-// CONFIG
-var GOROUTINE_COUNT = 10
-var CHANNEL_CAPACITY int = 100
-var SMTP_POOL_SIZE int = 10
-
-// CONUTERS
-var countSent int32 = 0
-
 func main() {
+	// vars
+	goroutineCountStr := env.GetEnv("GOROUTINE_COUNT", "100")
+	smtpPoolSizeStr := env.GetEnv("SMTP_POOL_SIZE", "10")
+	channelCapacityStr := env.GetEnv("CHANNEL_CAPACITY", "100")
 	smtpHost := env.GetEnv("SMTP_HOST", "localhost")
 	smtpPort := env.GetEnv("SMTP_PORT", "25")
 	emailCountStr := env.GetEnv("EMAIL_COUNT", "100")
+	// cast string to int
+	goroutineCount, err := strconv.Atoi(goroutineCountStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	smtpPoolSize, err := strconv.Atoi(smtpPoolSizeStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	channelCapacity, err := strconv.Atoi(channelCapacityStr)
+	if err != nil {
+		log.Fatal(err)
+	}
 	emailCount, err := strconv.Atoi(emailCountStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	queue := make(chan Queue, CHANNEL_CAPACITY)
+	// stats
+	var countSent int32 = 0
+
+	queue := make(chan Queue, channelCapacity)
 	var wg sync.WaitGroup
-	start := time.Now()
 
 	// enqueue mocks
 	wg.Add(1)
@@ -97,13 +83,16 @@ func main() {
 		}
 	}()
 
-	pool, err := smtppool.NewPool(SMTP_POOL_SIZE, smtpHost, smtpPort)
+	pool, err := smtppool.NewPool(smtpPoolSize, smtpHost, smtpPort)
 	if err != nil {
 		log.Fatalf("Error while creating smtp pool: %v", err)
 	}
 
+	// excluding pool init time
+	start := time.Now()
+
 	// create multiple goroutines to send email to smtp server
-	for i := range GOROUTINE_COUNT {
+	for i := range goroutineCount {
 		go func(idx int) {
 			log.Printf("Started goroutine %d", idx)
 
@@ -156,7 +145,7 @@ func main() {
 
 	// wait
 	wg.Wait()
-	fmt.Printf("%d sent, %d goroutines, %d smtp clients, %d channel capacity, %d ms\n", countSent, GOROUTINE_COUNT, SMTP_POOL_SIZE, CHANNEL_CAPACITY, time.Since(start).Milliseconds())
+	fmt.Printf("%d sent, %d goroutines, %d smtp clients, %d channel capacity, %d ms\n", countSent, goroutineCount, smtpPoolSize, channelCapacity, time.Since(start).Milliseconds())
 }
 
 func mockEmailPaylod() (string, []string, []byte) {
