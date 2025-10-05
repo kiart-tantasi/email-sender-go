@@ -9,6 +9,9 @@ import (
 	"github.com/kiart-tantasi/email-sender-go/internal/env"
 )
 
+// NOTE: pool v2 has issue that it creates more connections more than pool size.
+// The cause is method "Get" always create a new smtp client instead of waiting for ones in progress.
+
 type SMTPPoolV2 struct {
 	clients []*smtp.Client
 	mu      sync.Mutex
@@ -54,12 +57,10 @@ func (p *SMTPPoolV2) Get() (*smtp.Client, error) {
 			return client, nil
 		}
 		// Non-okay
-		log.Printf("SMTP Client index %d is not okay (NOOP). Closing its connection...", i)
 		client.Close()
-		client = nil
 	}
 
-	log.Printf("No smtp clients are okay. Recreating new smtp client...")
+	// When smtp clients are available, create new smtp client
 	return NewClient(p.addr)
 }
 
@@ -67,8 +68,8 @@ func (p *SMTPPoolV2) Return(client *smtp.Client) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
+	// Pool is full. Close and discard connection
 	if len(p.clients) > p.size {
-		log.Println("Pool is full. Closing a smtp client connection...")
 		client.Close()
 		return
 	}

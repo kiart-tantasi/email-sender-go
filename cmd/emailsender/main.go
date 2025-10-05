@@ -28,6 +28,10 @@ import (
 
 summary: after 50 smtp clients, there is no increase on performance.
 
+# pool v2, 10000sent, gosmtp
+
+10000 sent, 100 goroutines, 10 smtp clients, 100 channel capacity, 11630 ms
+
 */
 
 type Queue struct {
