@@ -17,7 +17,7 @@ import (
 
 (macbook air m2)
 
-# pool v1, 10,000
+# pool v1, 10000 sent, gosmtp
 
 10000 sent, 100 goroutines, 1 smtp clients, 100 channel capacity, 878 ms
 10000 sent, 100 goroutines, 2 smtp clients, 100 channel capacity, 508 ms
