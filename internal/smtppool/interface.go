@@ -2,7 +2,7 @@ package smtppool
 
 import "net/smtp"
 
-type ISMTPPool interface {
+type SMTPPool interface {
 	Get() (*smtp.Client, error)
 	Return(*smtp.Client)
 }

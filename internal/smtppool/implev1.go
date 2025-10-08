@@ -10,7 +10,7 @@ type SMTPPoolV1 struct {
 	clients chan *smtp.Client
 }
 
-func newSMTPPoolV1(size int, smtpHost, smtpPort string) (ISMTPPool, error) {
+func newSMTPPoolV1(size int, smtpHost, smtpPort string) (SMTPPool, error) {
 
 	clients := make(chan *smtp.Client, size)
 

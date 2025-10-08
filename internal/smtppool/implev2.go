@@ -19,7 +19,7 @@ type SMTPPoolV2 struct {
 	size    int
 }
 
-func newSMTPPoolV2(size int, smtpHost, smtpPort string) (ISMTPPool, error) {
+func newSMTPPoolV2(size int, smtpHost, smtpPort string) (SMTPPool, error) {
 	addr := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
 	clients := []*smtp.Client{}
 
