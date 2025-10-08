@@ -17,6 +17,7 @@ type SMTPPoolV2 struct {
 	mu      sync.Mutex
 	addr    string
 	size    int
+	sem     chan struct{}
 }
 
 func newSMTPPoolV2(size int, smtpHost, smtpPort string) (SMTPPool, error) {
@@ -38,11 +39,18 @@ func newSMTPPoolV2(size int, smtpHost, smtpPort string) (SMTPPool, error) {
 	return &SMTPPoolV2{
 			clients: clients,
 			addr:    addr,
-			size:    size},
+			size:    size,
+			sem:     make(chan struct{}, size),
+		},
 		nil
 }
 
 func (p *SMTPPoolV2) Get() (*smtp.Client, error) {
+	// we need both sem and lock because they work on 2 different purposes
+	// 1. sem makes sure cliens cannot be more than pool size
+	// 2. sem makes sure slice clients is thread-safe
+	p.sem <- struct{}{}
+
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -68,10 +76,9 @@ func (p *SMTPPoolV2) Return(client *smtp.Client) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	// Pool is full. Close and discard connection
-	if len(p.clients) > p.size {
-		client.Close()
-		return
-	}
+	// return client to pool
 	p.clients = append(p.clients, client)
+
+	// free a slot
+	<-p.sem
 }

@@ -30,7 +30,12 @@ summary: after 50 smtp clients, there is no increase on performance.
 
 # pool v2, 10000sent, gosmtp
 
-10000 sent, 100 goroutines, 10 smtp clients, 100 channel capacity, 11630 ms
+10000 sent, 100 goroutines, 1 smtp clients, 100 channel capacity, 1069 ms
+10000 sent, 100 goroutines, 2 smtp clients, 100 channel capacity, 592 ms
+10000 sent, 100 goroutines, 5 smtp clients, 100 channel capacity, 553 ms
+10000 sent, 100 goroutines, 10 smtp clients, 100 channel capacity, 511 ms
+10000 sent, 100 goroutines, 50 smtp clients, 100 channel capacity, 508 ms
+10000 sent, 100 goroutines, 100 smtp clients, 100 channel capacity, 507 ms
 
 */
 
@@ -43,7 +48,7 @@ type Queue struct {
 func main() {
 	// vars
 	goroutineCountStr := env.GetEnv("GOROUTINE_COUNT", "100")
-	smtpPoolSizeStr := env.GetEnv("SMTP_POOL_SIZE", "10")
+	smtpPoolSizeStr := env.GetEnv("POOL_SIZE", "10")
 	channelCapacityStr := env.GetEnv("CHANNEL_CAPACITY", "100")
 	smtpHost := env.GetEnv("SMTP_HOST", "localhost")
 	smtpPort := env.GetEnv("SMTP_PORT", "25")
@@ -100,9 +105,6 @@ func main() {
 	// create multiple goroutines to send email to smtp server
 	for i := range goroutineCount {
 		go func(idx int) {
-			log.Printf("Started goroutine %d", idx)
-
-			// infinite loop
 			for {
 				select {
 				case q := <-queue:
