@@ -48,6 +48,8 @@ func main() {
 	smtpHost := env.GetEnv("SMTP_HOST", "localhost")
 	smtpPort := env.GetEnv("SMTP_PORT", "25")
 	emailCountStr := env.GetEnv("EMAIL_COUNT", "100")
+	poolVersion := env.GetEnv("POOL_VERSION", "V1")
+
 	// cast string to int
 	goroutineCount, err := strconv.Atoi(goroutineCountStr)
 	if err != nil {
@@ -87,7 +89,7 @@ func main() {
 		}
 	}()
 
-	pool, err := smtppool.NewPool(smtpPoolSize, smtpHost, smtpPort)
+	pool, err := smtppool.NewPool(smtpPoolSize, smtpHost, smtpPort, poolVersion)
 	if err != nil {
 		log.Fatalf("Error while creating smtp pool: %v", err)
 	}

@@ -3,12 +3,10 @@ package smtppool
 import (
 	"log"
 	"net/smtp"
-
-	"github.com/kiart-tantasi/email-sender-go/internal/env"
 )
 
-func NewPool(size int, smtpHost, smtpPort string) (SMTPPool, error) {
-	if env.GetEnv("POOL_VERSION", "V1") == "V2" {
+func NewPool(size int, smtpHost, smtpPort string, poolVersion string) (SMTPPool, error) {
+	if poolVersion == "V2" {
 		log.Println("Creating pool v2")
 		return newSMTPPoolV2(size, smtpHost, smtpPort)
 	}

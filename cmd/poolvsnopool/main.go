@@ -24,6 +24,7 @@ func main() {
 	smtpPort := env.GetEnv("SMTP_PORT", "25")
 	emailCountStr := env.GetEnv("EMAIL_COUNT", "10000")
 	noPoolVersion := env.GetEnv("NO_POOL_VERSION", "V1")
+	poolVersion := env.GetEnv("POOL_VERSION", "V1")
 
 	// cast
 	emailCount, err := strconv.Atoi(emailCountStr)
@@ -37,7 +38,7 @@ func main() {
 	// send emails
 	if isPool {
 		log.Println("Using pool")
-		Pool(smtpHost, smtpPort, emailCount, &countSent)
+		Pool(smtpHost, smtpPort, emailCount, &countSent, poolVersion)
 	} else {
 		if noPoolVersion == "V1" {
 			log.Println("Not using pool V1")
@@ -53,8 +54,8 @@ func main() {
 	log.Printf("Sent %d emails in %d ms (%f emails/sec)", countSent, taken.Milliseconds(), (float64(countSent) / taken.Seconds()))
 }
 
-func Pool(smtpHost, smtpPort string, emailCount int, countSent *int) {
-	pool, err := smtppool.NewPool(10, smtpHost, smtpPort)
+func Pool(smtpHost, smtpPort string, emailCount int, countSent *int, poolVersion string) {
+	pool, err := smtppool.NewPool(10, smtpHost, smtpPort, poolVersion)
 	if err != nil {
 		log.Fatal(err)
 	}
