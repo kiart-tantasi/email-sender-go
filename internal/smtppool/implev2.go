@@ -21,8 +21,8 @@ type SMTPPoolV2 struct {
 }
 
 func newSMTPPoolV2(size int, smtpHost, smtpPort string) (SMTPPool, error) {
-	addr := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
 	clients := []*smtp.Client{}
+	addr := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
 
 	// preload connections
 	if env.GetEnv("SMTP_PRELOAD", "true") == "true" {

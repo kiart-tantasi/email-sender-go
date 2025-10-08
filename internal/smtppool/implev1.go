@@ -8,21 +8,22 @@ import (
 
 type SMTPPoolV1 struct {
 	clients chan *smtp.Client
+	addr    string
 }
 
 func newSMTPPoolV1(size int, smtpHost, smtpPort string) (SMTPPool, error) {
-
 	clients := make(chan *smtp.Client, size)
+	addr := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
 
 	for range size {
-		if client, err := NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort), ""); err != nil {
+		if client, err := NewClient(addr, ""); err != nil {
 			return nil, err
 		} else {
 			clients <- client
 		}
 	}
 
-	return &SMTPPoolV1{clients: clients}, nil
+	return &SMTPPoolV1{clients: clients, addr: addr}, nil
 }
 
 func (p *SMTPPoolV1) Get() (*smtp.Client, error) {
