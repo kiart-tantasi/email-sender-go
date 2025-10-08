@@ -111,14 +111,13 @@ func main() {
 						return
 					}
 
-					client.Hello("TEST")
 					client.Mail(q.from)
 					client.Rcpt(q.to[0])
 					writer, err := client.Data()
 					// reconnect if client gets error
 					if err != nil {
 						log.Printf("Client data error, attempting to reconnect: %v", err)
-						client, err = smtppool.NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
+						client, err = smtppool.NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort), "")
 						if err != nil {
 							log.Printf("Error when creating new smtp client: %s", err)
 							pool.Return(client)

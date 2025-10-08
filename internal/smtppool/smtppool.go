@@ -16,10 +16,18 @@ func NewPool(size int, smtpHost, smtpPort string) (ISMTPPool, error) {
 	return newSMTPPoolV1(size, smtpHost, smtpPort)
 }
 
-func NewClient(addr string) (*smtp.Client, error) {
+func NewClient(addr, helo string) (*smtp.Client, error) {
 	client, err := smtp.Dial(addr)
 	if err != nil {
 		return nil, err
 	}
+
+	// HELO (optional)
+	if helo != "" {
+		if err := client.Hello(helo); err != nil {
+			return nil, err
+		}
+	}
+
 	return client, nil
 }

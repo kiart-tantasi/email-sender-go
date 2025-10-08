@@ -10,7 +10,7 @@ import (
 // for simple and quick test
 
 func main() {
-	client, err := smtppool.NewClient("localhost:25")
+	client, err := smtppool.NewClient("localhost:25", "")
 	if err != nil {
 		log.Fatal(err)
 	}

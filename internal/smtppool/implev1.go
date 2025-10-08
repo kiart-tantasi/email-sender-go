@@ -15,7 +15,7 @@ func newSMTPPoolV1(size int, smtpHost, smtpPort string) (ISMTPPool, error) {
 	clients := make(chan *smtp.Client, size)
 
 	for range size {
-		if client, err := NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort)); err != nil {
+		if client, err := NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort), ""); err != nil {
 			return nil, err
 		} else {
 			clients <- client

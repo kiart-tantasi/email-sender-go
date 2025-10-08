@@ -11,14 +11,15 @@ import (
 	"github.com/kiart-tantasi/email-sender-go/internal/smtppool"
 )
 
-// pool v1 - 800 ms
-// pool v2 - 900 ms
-// no pool v1 - 800 ms
-// no pool v2 - 21000 ms
+// pool v1 - Sent 10000 emails in 850 ms (11762.241001 emails/sec)
+// pool v2 - Sent 10000 emails in 1050 ms (9516.048660 emails/sec)
+// no pool v1 - Sent 10000 emails in 819 ms (12198.471562 emails/sec)
+// no pool v2 - Sent 10000 emails in 21985 ms (454.839723 emails/sec)
 
 func main() {
 	// env vars
 	isPool := env.GetEnv("IS_POOL", "true") == "true"
+
 	smtpHost := env.GetEnv("SMTP_HOST", "localhost")
 	smtpPort := env.GetEnv("SMTP_PORT", "25")
 	emailCountStr := env.GetEnv("EMAIL_COUNT", "10000")
@@ -63,8 +64,6 @@ func Pool(smtpHost, smtpPort string, emailCount int, countSent *int) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		// HELO
-		client.Hello("TEST")
 		// MAIL FROM
 		client.Mail(fmt.Sprintf("from%d@test.com", i))
 		// RCPT TO
@@ -74,7 +73,7 @@ func Pool(smtpHost, smtpPort string, emailCount int, countSent *int) {
 		// reconnect if client gets error
 		if err != nil {
 			log.Printf("Client data error, attempting to reconnect: %v", err)
-			client, err = smtppool.NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
+			client, err = smtppool.NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort), "")
 			if err != nil {
 				log.Fatalf("Error when creating new smtp client: %s", err)
 			}
@@ -90,14 +89,11 @@ func Pool(smtpHost, smtpPort string, emailCount int, countSent *int) {
 	}
 }
 
+// single smtp.Client
 func NoPoolV1(smtpHost, smtpPort string, emailCount int, countSent *int) {
-	client, err := smtppool.NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
+	client, err := smtppool.NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort), "")
 	if err != nil {
 		log.Fatalf("Error when creating smtp client: %v", err)
-	}
-	client.Hello("TEST")
-	if err != nil {
-		log.Fatalf("Error when running HELO: %v", err)
 	}
 
 	for i := range emailCount {
@@ -110,7 +106,7 @@ func NoPoolV1(smtpHost, smtpPort string, emailCount int, countSent *int) {
 		// reconnect if client gets error
 		if err != nil {
 			log.Printf("Client data error, attempting to reconnect: %v", err)
-			client, err = smtppool.NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
+			client, err = smtppool.NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort), "")
 			if err != nil {
 				log.Fatalf("Error when creating new smtp client: %s", err)
 			}
@@ -125,18 +121,9 @@ func NoPoolV1(smtpHost, smtpPort string, emailCount int, countSent *int) {
 	}
 }
 
+// smtp.SendMail
 func NoPoolV2(smtpHost, smtpPort string, emailCount int, countSent *int) {
-	client, err := smtppool.NewClient(fmt.Sprintf("%s:%s", smtpHost, smtpPort))
-	if err != nil {
-		log.Fatalf("Error when creating smtp client: %v", err)
-	}
-	client.Hello("TEST")
-	if err != nil {
-		log.Fatalf("Error when running HELO: %v", err)
-	}
-
 	for i := range emailCount {
-
 		err := smtp.SendMail(
 			fmt.Sprintf("%s:%s", smtpHost, smtpPort),
 			nil,

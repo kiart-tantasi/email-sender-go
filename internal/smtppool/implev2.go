@@ -27,7 +27,7 @@ func newSMTPPoolV2(size int, smtpHost, smtpPort string) (ISMTPPool, error) {
 	if env.GetEnv("SMTP_PRELOAD", "true") == "true" {
 		log.Printf("Preloading %d connections...", size)
 		for range size {
-			client, err := NewClient(addr)
+			client, err := NewClient(addr, "")
 			if err != nil {
 				return nil, err
 			}
@@ -61,7 +61,7 @@ func (p *SMTPPoolV2) Get() (*smtp.Client, error) {
 	}
 
 	// When smtp clients are available, create new smtp client
-	return NewClient(p.addr)
+	return NewClient(p.addr, "")
 }
 
 func (p *SMTPPoolV2) Return(client *smtp.Client) {
