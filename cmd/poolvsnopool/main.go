@@ -15,6 +15,7 @@ import (
 // pool v2 - Sent 10000 emails in 1050 ms (9516.048660 emails/sec)
 // no pool v1 - Sent 10000 emails in 819 ms (12198.471562 emails/sec)
 // no pool v2 - Sent 10000 emails in 21985 ms (454.839723 emails/sec)
+// [NOTE: all of these are not using goroutines]
 
 func main() {
 	// env vars
