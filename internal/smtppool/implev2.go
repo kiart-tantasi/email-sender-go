@@ -9,9 +9,6 @@ import (
 	"github.com/kiart-tantasi/email-sender-go/internal/env"
 )
 
-// NOTE: pool v2 has issue that it creates more connections more than pool size.
-// The cause is method "Get" always create a new smtp client instead of waiting for ones in progress.
-
 type SMTPPoolV2 struct {
 	clients []*smtp.Client
 	mu      sync.Mutex

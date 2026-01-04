@@ -7,10 +7,10 @@ import (
 
 func NewPool(size int, smtpHost, smtpPort string, poolVersion string) (SMTPPool, error) {
 	if poolVersion == "V2" {
-		log.Println("Creating pool v2")
+		log.Println("Creating pool V2")
 		return newSMTPPoolV2(size, smtpHost, smtpPort)
 	}
-	log.Println("Creating pool v1")
+	log.Println("Creating pool V1")
 	return newSMTPPoolV1(size, smtpHost, smtpPort)
 }
 
