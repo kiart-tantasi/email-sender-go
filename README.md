@@ -26,25 +26,25 @@ go run ./cmd/emailsender/main.go
 
 ## Pool vs No Pool
 
-### Pool v1
+### Pool V1
 
 ```bash
 IS_POOL=true POOL_VERSION=V1 go run ./cmd/poolvsnopool/main.go
 ```
 
-### Pool v2
+### Pool V2
 
 ```bash
 IS_POOL=true POOL_VERSION=V2 go run ./cmd/poolvsnopool/main.go
 ```
 
-### No pool v1
+### No pool V1
 
 ```bash
 IS_POOL=false NO_POOL_VERSION=V1 go run ./cmd/poolvsnopool/main.go
 ```
 
-### No pool v2
+### No pool V2
 
 ```bash
 IS_POOL=false NO_POOL_VERSION=V2 go run ./cmd/poolvsnopool/main.go

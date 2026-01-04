@@ -17,7 +17,7 @@ import (
 
 (macbook air m2)
 
-# pool v1, 10000 sent, gosmtp
+# pool V1, 10000 sent, gosmtp
 
 10000 sent, 100 goroutines, 1 smtp clients, 100 channel capacity, 878 ms
 10000 sent, 100 goroutines, 2 smtp clients, 100 channel capacity, 508 ms
@@ -28,7 +28,7 @@ import (
 
 summary: after 50 smtp clients, there is no increase on performance.
 
-# pool v2, 10000sent, gosmtp
+# pool V2, 10000sent, gosmtp
 
 10000 sent, 100 goroutines, 1 smtp clients, 100 channel capacity, 1069 ms
 10000 sent, 100 goroutines, 2 smtp clients, 100 channel capacity, 592 ms

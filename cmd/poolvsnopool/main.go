@@ -13,10 +13,10 @@ import (
 	"github.com/kiart-tantasi/email-sender-go/internal/smtppool"
 )
 
-// pool v1 - Sent 10000 emails in 326 ms (30624.647099 emails/sec)
-// pool v2 - Sent 10000 emails in 519 ms (19266.798774 emails/sec)
-// no pool v1 - Sent 10000 emails in 780 ms (12811.706825 emails/sec)
-// no pool v2 - Sent 10000 emails in 5663 ms (1765.775917 emails/sec)
+// pool V1 - Sent 10000 emails in 326 ms (30624.647099 emails/sec)
+// pool V2 - Sent 10000 emails in 519 ms (19266.798774 emails/sec)
+// no pool V1 - Sent 10000 emails in 780 ms (12811.706825 emails/sec)
+// no pool V2 - Sent 10000 emails in 5663 ms (1765.775917 emails/sec)
 
 /*
 [SUMMARY]
