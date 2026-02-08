@@ -13,17 +13,7 @@ import (
 	"github.com/kiart-tantasi/email-sender-go/internal/smtppool"
 )
 
-// pool V1 - Sent 10000 emails in 326 ms (30624.647099 emails/sec)
-// pool V2 - Sent 10000 emails in 519 ms (19266.798774 emails/sec)
-// no pool V1 - Sent 10000 emails in 780 ms (12811.706825 emails/sec)
-// no pool V2 - Sent 10000 emails in 5663 ms (1765.775917 emails/sec)
-
-/*
-[SUMMARY]
-- Pool is faster than no pool.
-- When using pool, keeping smtp clients in channel is faster than keeping them in slice. (58.95% faster)
-- When using no pool, creating a new smtp client is faster than using smtp.SendMail. (625.6% faster)
-*/
+// NOTE: results are in README.md
 
 func main() {
 	// env vars
