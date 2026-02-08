@@ -44,8 +44,8 @@ func newSMTPPoolV2(size int, smtpHost, smtpPort string) (SMTPPool, error) {
 
 func (p *SMTPPoolV2) Get() (*smtp.Client, error) {
 	// we need both sem and lock because they work on 2 different purposes
-	// 1. sem makes sure cliens cannot be more than pool size
-	// 2. sem makes sure slice clients is thread-safe
+	// 1. sem makes sure amount of clients does not exceed pool size
+	// 2. lock makes sure slice clients is thread-safe
 	p.sem <- struct{}{}
 
 	p.mu.Lock()
